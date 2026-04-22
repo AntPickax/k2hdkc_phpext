@@ -131,10 +131,6 @@ if [ -z "${CI_PHPTYPE}" ]; then
 	#
 	:
 
-elif echo "${CI_PHPTYPE}" | grep -q -i -e "PHP8.2" -e "PHP82" -e "8.2" -e "82"; then
-	PHPVER_NOPERIOD="82"
-	PHPVER_WITHPERIOD="8.2"
-
 elif echo "${CI_PHPTYPE}" | grep -q -i -e "PHP8.3" -e "PHP83" -e "8.3" -e "83"; then
 	PHPVER_NOPERIOD="83"
 	PHPVER_WITHPERIOD="8.3"
@@ -142,6 +138,10 @@ elif echo "${CI_PHPTYPE}" | grep -q -i -e "PHP8.3" -e "PHP83" -e "8.3" -e "83"; 
 elif echo "${CI_PHPTYPE}" | grep -q -i -e "PHP8.4" -e "PHP84" -e "8.4" -e "84"; then
 	PHPVER_NOPERIOD="84"
 	PHPVER_WITHPERIOD="8.4"
+
+elif echo "${CI_PHPTYPE}" | grep -q -i -e "PHP8.5" -e "PHP85" -e "8.5" -e "85"; then
+	PHPVER_NOPERIOD="85"
+	PHPVER_WITHPERIOD="8.5"
 fi
 
 #
@@ -152,6 +152,37 @@ if [ -z "${CI_OSTYPE}" ]; then
 	# Unknown OS : Nothing to do
 	#
 	:
+
+elif echo "${CI_OSTYPE}" | grep -q -i -e "ubuntu:26.04" -e "ubuntu:resolute"; then
+	DIST_TAG="ubuntu/resolute"
+	PKG_EXT="deb"
+	PKG_OUTPUT_DIR="packages"
+
+	INSTALLER_BIN="apt-get"
+	UPDATE_CMD="update"
+	UPDATE_CMD_ARG=""
+	INSTALL_CMD="install"
+	INSTALL_CMD_ARG=""
+	INSTALL_AUTO_ARG="-y"
+	INSTALL_QUIET_ARG="-qq"
+	INSTALL_PKG_LIST="git lintian debhelper pkg-config ruby-dev rubygems rubygems-integration procps shtool k2hdkc-dev"
+
+	INSTALL_PHP_PRE_ADD_REPO="ca-certificates apt-transport-https software-properties-common"
+	INSTALL_PHP_REPO="ppa:ondrej/php"
+	INSTALL_PHP_PKG_LIST="dh-php php${PHPVER_WITHPERIOD} php${PHPVER_WITHPERIOD}-dev libapache2-mod-php${PHPVER_WITHPERIOD}"
+	INSTALL_PHP_OPT=""
+	INSTALL_PHP_POST_CONFIG="update-alternatives --set php-config /usr/bin/php-config${PHPVER_WITHPERIOD}"
+	INSTALL_PHP_POST_BIN="update-alternatives --set php /usr/bin/php${PHPVER_WITHPERIOD}"
+	SWITCH_PHP_COMMAND=""
+
+	IS_OS_UBUNTU=1
+
+	# [NOTE]
+	# Currently(2026/4), there is no PPA repository for Ubuntu 26.04.
+	# While PHP 8.5 can be installed without a PPA, we will not support Ubuntu 26.04 until
+	# a PPA is available.
+	#
+	NOT_PROVIDED_PHPVER=1
 
 elif echo "${CI_OSTYPE}" | grep -q -i -e "ubuntu:24.04" -e "ubuntu:noble"; then
 	DIST_TAG="ubuntu/noble"
@@ -380,8 +411,8 @@ elif echo "${CI_OSTYPE}" | grep -q -i "rockylinux:8"; then
 		echo "[ERROR] Failed to install \"dnf-command(config-manager)\". The script doesn't break here, but fails to install the package."
 	fi
 
-elif echo "${CI_OSTYPE}" | grep -q -i "fedora:42"; then
-	DIST_TAG="fedora/42"
+elif echo "${CI_OSTYPE}" | grep -q -i "fedora:44"; then
+	DIST_TAG="fedora/44"
 	PKG_EXT="rpm"
 	PKG_OUTPUT_DIR="packages"
 
@@ -395,7 +426,7 @@ elif echo "${CI_OSTYPE}" | grep -q -i "fedora:42"; then
 	INSTALL_PKG_LIST="git make diffutils pkgconfig patch yum-utils rpmdevtools redhat-rpm-config rpm-build rpm-devel rpmlint scl-utils-build ruby-devel rubygems procps python3 k2hdkc-devel"
 
 	INSTALL_PHP_PRE_ADD_REPO=""
-	INSTALL_PHP_REPO="https://rpms.remirepo.net/fedora/remi-release-42.rpm"
+	INSTALL_PHP_REPO="https://rpms.remirepo.net/fedora/remi-release-44.rpm"
 	INSTALL_PHP_PKG_LIST="php${PHPVER_NOPERIOD}-php-devel php${PHPVER_NOPERIOD}-scldevel php${PHPVER_NOPERIOD}-build"
 	INSTALL_PHP_OPT=""
 	INSTALL_PHP_POST_CONFIG=""
@@ -404,8 +435,8 @@ elif echo "${CI_OSTYPE}" | grep -q -i "fedora:42"; then
 
 	IS_OS_FEDORA=1
 
-elif echo "${CI_OSTYPE}" | grep -q -i "fedora:41"; then
-	DIST_TAG="fedora/41"
+elif echo "${CI_OSTYPE}" | grep -q -i "fedora:43"; then
+	DIST_TAG="fedora/43"
 	PKG_EXT="rpm"
 	PKG_OUTPUT_DIR="packages"
 
@@ -419,7 +450,7 @@ elif echo "${CI_OSTYPE}" | grep -q -i "fedora:41"; then
 	INSTALL_PKG_LIST="git make diffutils pkgconfig patch yum-utils rpmdevtools redhat-rpm-config rpm-build rpm-devel rpmlint scl-utils-build ruby-devel rubygems procps python3 k2hdkc-devel"
 
 	INSTALL_PHP_PRE_ADD_REPO=""
-	INSTALL_PHP_REPO="https://rpms.remirepo.net/fedora/remi-release-41.rpm"
+	INSTALL_PHP_REPO="https://rpms.remirepo.net/fedora/remi-release-43.rpm"
 	INSTALL_PHP_PKG_LIST="php${PHPVER_NOPERIOD}-php-devel php${PHPVER_NOPERIOD}-scldevel php${PHPVER_NOPERIOD}-build"
 	INSTALL_PHP_OPT=""
 	INSTALL_PHP_POST_CONFIG=""
@@ -427,6 +458,30 @@ elif echo "${CI_OSTYPE}" | grep -q -i "fedora:41"; then
 	SWITCH_PHP_COMMAND="scl enable php${PHPVER_NOPERIOD} --"
 
 	IS_OS_FEDORA=1
+
+elif echo "${CI_OSTYPE}" | grep -q -i "alpine:3.23"; then
+	DIST_TAG="alpine/v3.23"
+	PKG_EXT="apk"
+	PKG_OUTPUT_DIR="packages"
+
+	INSTALLER_BIN="apk"
+	UPDATE_CMD="update"
+	UPDATE_CMD_ARG="--no-progress"
+	INSTALL_CMD="add"
+	INSTALL_CMD_ARG="--no-progress --no-cache"
+	INSTALL_AUTO_ARG=""
+	INSTALL_QUIET_ARG="-q"
+	INSTALL_PKG_LIST="bash sudo alpine-sdk util-linux-misc musl-locales ruby-dev procps k2hdkc-dev"
+
+	INSTALL_PHP_PRE_ADD_REPO=""
+	INSTALL_PHP_REPO=""
+	INSTALL_PHP_PKG_LIST="php${PHPVER_NOPERIOD} php${PHPVER_NOPERIOD}-dev"
+	INSTALL_PHP_OPT=""
+	INSTALL_PHP_POST_CONFIG=""
+	INSTALL_PHP_POST_BIN=""
+	SWITCH_PHP_COMMAND=""
+
+	IS_OS_ALPINE=1
 
 elif echo "${CI_OSTYPE}" | grep -q -i "alpine:3.22"; then
 	DIST_TAG="alpine/v3.22"
@@ -452,11 +507,7 @@ elif echo "${CI_OSTYPE}" | grep -q -i "alpine:3.22"; then
 
 	IS_OS_ALPINE=1
 
-	# [FIXME]
-	# We want to use PHP8.4 for ALPINE3.21, but phpize is not included in php84-dev.
-	# Therefore, at the moment (February 2025), we will use PHP8.3.
-	#
-	if [ "${PHPVER_NOPERIOD}" != "83" ]; then
+	if [ "${PHPVER_NOPERIOD}" = "85" ]; then
 		NOT_PROVIDED_PHPVER=1
 	fi
 
@@ -484,39 +535,7 @@ elif echo "${CI_OSTYPE}" | grep -q -i "alpine:3.21"; then
 
 	IS_OS_ALPINE=1
 
-	# [FIXME]
-	# We want to use PHP8.4 for ALPINE3.21, but phpize is not included in php84-dev.
-	# Therefore, at the moment (February 2025), we will use PHP8.3.
-	#
-	if [ "${PHPVER_NOPERIOD}" != "83" ]; then
-		NOT_PROVIDED_PHPVER=1
-	fi
-
-elif echo "${CI_OSTYPE}" | grep -q -i "alpine:3.20"; then
-	DIST_TAG="alpine/v3.20"
-	PKG_EXT="apk"
-	PKG_OUTPUT_DIR="packages"
-
-	INSTALLER_BIN="apk"
-	UPDATE_CMD="update"
-	UPDATE_CMD_ARG="--no-progress"
-	INSTALL_CMD="add"
-	INSTALL_CMD_ARG="--no-progress --no-cache"
-	INSTALL_AUTO_ARG=""
-	INSTALL_QUIET_ARG="-q"
-	INSTALL_PKG_LIST="bash sudo alpine-sdk util-linux-misc musl-locales ruby-dev procps k2hdkc-dev"
-
-	INSTALL_PHP_PRE_ADD_REPO=""
-	INSTALL_PHP_REPO=""
-	INSTALL_PHP_PKG_LIST="php${PHPVER_NOPERIOD} php${PHPVER_NOPERIOD}-dev"
-	INSTALL_PHP_OPT=""
-	INSTALL_PHP_POST_CONFIG=""
-	INSTALL_PHP_POST_BIN=""
-	SWITCH_PHP_COMMAND=""
-
-	IS_OS_ALPINE=1
-
-	if [ "${PHPVER_NOPERIOD}" != "83" ]; then
+	if [ "${PHPVER_NOPERIOD}" = "85" ]; then
 		NOT_PROVIDED_PHPVER=1
 	fi
 fi
